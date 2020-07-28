@@ -12,7 +12,8 @@ Y=3
 SIZE=X*Y
 
 
-CUT=50
+#test
+CUT=30
 MAX_BRANCH_POOL=100
 
 
