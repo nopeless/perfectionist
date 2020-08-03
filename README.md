@@ -17,4 +17,4 @@ MAX_INT=<the maximum number of the tile. used to pigeon sort>
 `get_best_fever_score.py` is an endgame/fever time purpose only prototype.
 
 ## Contributers
-* **Me Too Thanks#7924** *(discord)* - author of `get_best_fever_score.py`
+* **Me Too Thanks#7924** *(discord)* - author of `get_best_fever_score.py`, `fetch_daily_board.py`
