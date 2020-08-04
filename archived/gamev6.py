@@ -1,4 +1,8 @@
-
+# v7 revision
+# v6 was the first attempt to implement a tree-leaf search
+# it got scrapped due to it not utilizing memory efficiently
+# to be specific, v7 could shave off 1 memory writing step
+# which is huge when it comes to gcs
 
 
 
@@ -16,7 +20,7 @@
 from typing import List
 
 # yeets space complexity for best speed and constant performance
-
+# unfortunately had a memory issue. going for v7
 
 
 

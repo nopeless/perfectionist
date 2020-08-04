@@ -29,7 +29,7 @@ class Path:
 
 
 class B_path:
-	"""the class for paths with pair id(id ndarray of 2)"""
+	"""the class for paths with pair id(id ndarray of 2) OR 1"""
 	def __init__(self, id, paths:List[Path]=[]) -> None:
 		self.id=id
 		self.paths=paths
@@ -155,6 +155,9 @@ if __name__=="__main__":
 	# local pools will be executed until they hit the end and get dereferenced by python's gc
 	# basically this logic will store the "leafs" of the tree
 
+	def recursive_brancher(path):
+		# generate local pools and assign more global pools if needed
+		for 
 	cut=0
 	for i in range(2):
 		# a while True loop would do better, but this is just preventing overlooping

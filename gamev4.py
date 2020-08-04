@@ -1,3 +1,8 @@
+# v7 revision
+# this version is a working version of a search depth 1 pooling system
+# although it has major bugs, this is actually a working prototype capable of creating world records
+
+
 import itertools
 from itertools import repeat
 import numpy as np

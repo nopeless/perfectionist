@@ -1,3 +1,7 @@
+# v7 revision
+# this version tried to pair boards with branches
+# but i quickly realized a memory waste
+# and made path instance lists instead
 
 import numpy as np
 import math

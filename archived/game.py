@@ -1,3 +1,8 @@
+# v7 revision
+# this version was the first ever version that tried to utilize a tree search
+# was discarded to a depth 1 search
+
+
 
 import numpy as np
 import math
