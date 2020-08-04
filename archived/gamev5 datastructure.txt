@@ -1,0 +1,74 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pool[0,1,2]:
+	<int>: cumulative loss from lowest to min(CUT + lowest, MAX_POOLS)
+		...:
+			id:int
+			paths:[
+				(int,int),
+				...
+			]
+
+
+Board[0,1,2]:
+	<board>:
+		cumulative_loss: int
+		board_data:[
+			int,
+			...
+		]
+		paths:[
+			(int,int),
+			...
+		]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

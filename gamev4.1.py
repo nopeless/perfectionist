@@ -6,15 +6,16 @@ import heapq
 import copy
 
 
-
+# what is 4.1?
+# basically v4 with 1 minor bug fix(but leaving out the many)
 X=6
 Y=8
 SIZE=X*Y
 
 
 #test
-CUT=40
-MAX_BRANCH_POOL=20000
+CUT=30
+MAX_BRANCH_POOL=10000
 
 
 FEVER=10
@@ -225,7 +226,6 @@ if __name__=="__main__":
 	
 	old_list=[game_board]
 	iterblock=0
-	new_set=set()
 	while True:
 		print(f"iterating {iterblock} times...")
 		# print("-"*100)
@@ -276,18 +276,18 @@ if __name__=="__main__":
 					# we have time
 					# move is a Child_Move
 					if cmove.target == None:
-						new_set.add(old_list[cmove.id])
+						old_list.append(old_list[cmove.id])
 					else:
-						new_set.add(copy.deepcopy(old_list[cmove.id]).do_move(cmove))
+						old_list.append(copy.deepcopy(old_list[cmove.id]).do_move(cmove))
 			else:
 				# print("not iterating...")
 				# we have time
 				for cmove in moves:
 					# move is a Child_Move
 					if cmove.target == None:
-						new_set.add(old_list[cmove.id])
+						old_list.append(old_list[cmove.id])
 					else:
-						new_set.add(copy.deepcopy(old_list[cmove.id]).do_move(cmove))
+						old_list.append(copy.deepcopy(old_list[cmove.id]).do_move(cmove))
 			
 			remaining_branches-=len(moves)
 			if remaining_branches<=0:
@@ -297,11 +297,9 @@ if __name__=="__main__":
 		# print(new_set)
 		# print("-"*100)
 		# print("setting old list to new set")
-		old_list=list(new_set)
 		if len(old_list) == 0:
 			print("No solution under given parameters")
 			break
-		new_set=set()
 		
 
 
