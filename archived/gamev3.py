@@ -1,3 +1,8 @@
+# v7 revision
+# v3 implements a recursive board and an actual board class (not in the code)
+# it has various features but was discarded for a better branch logix
+
+
 import itertools
 from itertools import repeat
 import numpy as np

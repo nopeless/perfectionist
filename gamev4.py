@@ -1,3 +1,8 @@
+# v7 revision
+# this version is a working version of a search depth 1 pooling system
+# although it has major bugs, this is actually a working prototype capable of creating world records
+
+
 import itertools
 from itertools import repeat
 import numpy as np
@@ -7,14 +12,14 @@ import copy
 
 
 
-X=4
-Y=3
+X=6
+Y=8
 SIZE=X*Y
 
 
 #test
-CUT=30
-MAX_BRANCH_POOL=100
+CUT=40
+MAX_BRANCH_POOL=20000
 
 
 FEVER=10
@@ -204,10 +209,7 @@ if __name__=="__main__":
 	# 	 10, 11,  1,  9, 11, 11
 	# 	], dtype=np.byte), SIZE, 0)
 	game_board=r_board(np.array(
-		[
-		 1,4,3,5,
-		 2,3,3,7,
-		 10,5,10,12], dtype=np.byte), SIZE, 0)
+		[9,7,1,11,8,10,4,3,11,1,15,7,9,9,13,3,11,14,3,11,12,3,4,13,15,8,12,10,7,9,4,2,14,6,13,7,11,3,8,4,15,8,6,3,6,14,5,12], dtype=np.byte), SIZE, 0)
 	# game_board=r_board(np.array(
 	# 	[
 	# 	 1,2,
