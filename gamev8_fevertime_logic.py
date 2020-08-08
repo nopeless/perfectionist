@@ -1,9 +1,13 @@
-# v8 logic
-# v7 logic + set pooling 
+# v8 logic =
+# v7 logic + set pooling + different algos for each mode - skimming(incompatible with v8 logic)
 # basically have a set of dead pools
+# once a board dies, it goes into the hashed set
 # taking of set union lookup O(1)
 
 
+
+
+from copy import Error
 from typing import List
 import itertools
 from itertools import repeat
@@ -13,9 +17,7 @@ import heapq
 import copy
 
 import numpy
-from numpy.core.function_base import linspace
-
-
+import time
 
 
 # improved branching algorithm by creating local and global pools, releasing memory on local pools when they are found useless
@@ -24,46 +26,15 @@ from numpy.core.function_base import linspace
 # practicing the logic in fevertime before applying it to the main game
 
 
-# Basically, paths with 0 losses are a bit different and needs to be branched immediently
 
 
-# the return object is 2 arrays (finally some major design change from v1)
-# is it actually 2 arrays? no
-# but its almost the same a... idk my brain fried here. im not terry davis or smth
-# due to how global pool allocation works, this is memory efficient (at least in theory. idk how exactly python gc works)
-# 
-
-
-# design 2
-
-# global_pool
-# [
-#   0:[int,int,int...]
-#   1:B_path(directly gets appended to global pool, minimizing memory allocation)
-#   2:B_path(sometimes, the length is 0. if its 0, it doesnt get appended to the global pool)
-#   3:B_path
-#   ...
-#   14:B_path(14 is the last index. if this was a low level language, we can take an advantage of this)
-# ]
-
-# local pools will be populated with boards from those 0 paths
-
-
-
+start = time.time()
 
 
 
 MAX_INT=15
-MAX_INT_MINUS_ONE=MAX_INT-1
-# Fever time is not specified here, but it NEEDS to be lower than 15 (numpy dtype byte)
 
-class Board_id:
-	# only used to reference a board in a global pool
-	def __init__(self, lost, idx) -> None:
-		self.lost=lost
-		self.idx=idx
-	def __repr__(self) -> str:
-		return f"({self.lost}, {self.idx})"
+REMOVED_FROM_MEMORY=None
 
 
 class Path:
@@ -74,279 +45,300 @@ class Path:
 	def __repr__(self) -> str:
 		return f"<Path {self.sel}->{self.tar}>"
 
+
+class BoardLoc:
+	def __init__(self, lost:int, id:int) -> None:
+		self.lost=lost
+		self.id=id
+	def __repr__(self) -> str:
+		return f"({self.lost}, {self.id})"
+	# def is_origin(self) -> bool:
+	# 	return (self.lost==0) and (self.id==0)
+
+
 class B_path:
-	def __init__(self, id:Board_id=Board_id(0,0), paths:List[Path]=[]) -> None:
+	def __init__(self, id:BoardLoc=BoardLoc(0,0), paths:List[Path]=[]) -> None:
 		self.id=id
 		# list of paths
 		self.paths=paths
 	def __repr__(self) -> str:
 		return f"<B_path id={self.id} paths={self.paths}>"
+	
+# a board class
+# a board always has its id but its never stored inside the id
 
-
-
-
-class r_board:
-	def __init__(self, board, paths=[]) -> None:
+class FeverBoard:
+	# completely changed in form
+	def __init__(self, board, last_board:BoardLoc) -> None:
 		self.board=board
-		self.paths=paths
-		# originally had the idea of having a separate array of 0 indices
+		self.last_board=last_board
+		self.hash=hash(board.tobytes())
+	
 	def __repr__(self) -> str:
-		return f"<r_board path count={len(self.paths)} paths={self.paths}>"
-	def show_board(self) -> str:
-		return f"Board:\n{self.board}"
+		return f"<FeverBoard {self.board} last_board={self.last_board}>"
+
+
+	def get_valid_moves(self, loc:BoardLoc):
+		# advantages of having a path group
+		# share same id and reduce the amount of evaluation at a given time
+		"""returns a list of B_paths which is also a list\n
+		will be concatnated later\n
+		ex)\n
+		[\n
+			0: [int,int,int]
+			1: B_path
+			2: B_path
+			...\n
+		]\n
+		Remember to not append 0 length path values"""
+		rt = [[]]+[copy.deepcopy(B_path(loc)) for x in repeat(None, MAX_INT)]
+		# 15 elements
+		# print(rt)
+
+		nonzero=np.where(self.board != 0)[0]
+		if len(nonzero) == 0:
+			raise Error("ASKED TO FIND PATHS ON AN EMPTY BOARD")
+		if len(nonzero) == 1:
+			# there are multiple cases here
+			if self.board[nonzero[0]] == 1:
+				# if there is only 1 number
+				rt[nonzero[0]+1].paths.append(Path(np.byte(nonzero[0]), np.byte(nonzero[0])))
+				return rt
+			rt[0].append(nonzero[0])
+			return rt
+		for key, select in enumerate(nonzero):
+			# print("-- select --")
+			# print(select)
+			if self.board[select] > 1:
+				# print("tile appears more than twice. adding paired")
+				rt[0].append(np.byte(select)) # in c, it would be presented as a single byte
+			# print("-- target --")
+			for target in nonzero[key+1:]:
+				# print(target)
+				rt[min(target, select)+1].paths.append(Path(np.byte(select), np.byte(target)))
+		return rt
+
+	# methods to do stuff
+	def copy_do_move_pair_move(self, loc:BoardLoc, sel:int):
+		"""
+		this method does a move thats "paired" and returns a new instance
+		"""
+		board=copy.copy(self.board)
+		# board elements are primitives.
+		# shallow copy will work as well
+		board[sel]-=2
+		# change the value
+		return FeverBoard(board, loc)
+	def copy_do_move_lost(self, loc:BoardLoc, sel:int, tar:int):
+		"""
+		this method does a move where "sel" and "tar" are different and returns a new instance
+		"""
+		board=copy.copy(self.board)
+		if sel == tar:
+			# the only time it is the same is when the board only has 1 number
+			# otherwise, its going to be a paired move with lost 0
+			board[sel]-=1
+		else:
+			board[sel]-=1
+			board[tar]-=1
+			board[tar-sel-1]+=1
+		# board elements are primitives.
+		# shallow copy will work as well
+		# change the value
+		return FeverBoard(board, loc)
+
+
+
+	def __hash__(self):
+		return self.hash
+	def __eq__(self, other: object) -> bool:
+		return self.hash==other.hash
+
+	def is_finished(self) -> bool:
+		return not np.any(self.board, 0)
 
 	def format_board(board):
 		return_board=np.zeros(MAX_INT, numpy.byte) # extremely efficient
-		i=0
 		for tile in board:
 			return_board[tile-1]+=1
 		return return_board
-	def __eq__(self, other) -> None:
-		"""checks if boards are equal"""
-		for k, v in enumerate(self.board):
-			if v != other.board[k]:
-				return False
-		return True
-	def get_valid_moves(self, id:Board_id=Board_id(0,0)) -> List[B_path]:
-		"""returns a list of B_paths which is also a list\n
-		will be concatnated later\n
-		ex)\n
-		[\n
-			0: [int,int,int]
-			1: B_path
-			2: B_path
-			...\n
-		]\n
-		Remember to not append 0 length path values"""
-		# could use numpy to make the code more efficient
-		# HERE
-		rt = [[]]+[copy.deepcopy(B_path(id)) for x in repeat(None, MAX_INT_MINUS_ONE)]
-		# 15 elements
-		# print(rt)
 
-		nonzero=np.where(self.board != 0)[0]
-		# print(nonzero)
-		for key, select in enumerate(nonzero):
-			# print("-- select --")
-			# print(select)
-			if self.board[select] > 1:
-				# print("tile appears more than twice. adding paired")
-				rt[0].append(np.byte(select)) # in c, it would be presented as a single byte
-			# print("-- target --")
-			for target in nonzero[key+1:]:
-				# print(target)
-				rt[target-select].paths.append(Path(np.byte(select), np.byte(target)))
-		return rt
+
+
+
+hash_dict={}
+# stores hash
+# {
+# 	__hash__:BoardLoc
+# 	__hash__:BoardLoc
+# }
+
+# used to look up instances
+# BoardLoc contains the attribute lost which can be used to evalutate which board is better
+
+
+global_board_pool=[[] for _ in repeat(None, 30)]
+global_path_pool=[[] for _ in repeat(None, 30)]
+
+
+# we dont evaluate paths until needed
+# evalutate boards
+# evalutate paths
+# repeat
+
+
+
+# print("="*100)
+original_board=FeverBoard(FeverBoard.format_board([6,10,6,7,15,9,7,3,4,8]), None)
+# print(original_board)
+global_board_pool[0].append(original_board)
+hash_dict[original_board.hash]=BoardLoc(0,0)
+
+
+# pprint.pprint(global_board_pool)
+# pprint.pprint(hash_dict)
+
+# pprint.pprint(FeverBoard(FeverBoard.format_board([3]), None).get_valid_moves(BoardLoc(0,0)))
+
+# new_board=original_board.copy_do_move_pair_move(BoardLoc(0,0), 0)
+# new_board=FeverBoard(FeverBoard.format_board([6,10,6,7,15,9,7,3,4,8]), BoardLoc(1,2))
+# print(original_board.hash)
+# print(new_board.hash)
+
+
+# exit()
+
+
+cut=0
+def board_eval_recursive(root_board, board_lost):
+	# print(root_board.hash)
+	if root_board.is_finished() == True:
+		print(f"found at cut {cut}")
+		print("time took")
+		print(time.time()-start)
+		pprint.pprint(construct_boards(root_board))
+		exit()
+	bl=BoardLoc(board_lost, len(global_board_pool[board_lost]))
+	if root_board.hash in hash_dict:
+		if hash_dict[root_board.hash].lost < board_lost:
+			# raise Error("AN EXISTING HASH DICTIONARY HAD LOWER LOST THAN NEW")
+			# this statement should also return the funciton
+			# i just wanted to test some theory
+			return
+		if hash_dict[root_board.hash].lost > board_lost:
+			print("DEBUG: dictionary board had higher lost than new board. replacing...")
+			global_board_pool[hash_dict[root_board.hash].lost][hash_dict[root_board.hash].id]=None
+			# set the original board to a compromised board = "None"
+			# this is a bad practice but memorywise better
+			hash_dict[root_board.hash]=bl
+		else:
+			return
+	else:
+		hash_dict[root_board.hash]=bl
+	# print(bl)
+	global_board_pool[bl.lost].append(root_board)
+	moves=root_board.get_valid_moves(bl)
+	for move in moves[0]:
+		board_eval_recursive(root_board.copy_do_move_pair_move(bl, move), board_lost)
+	path_lost=board_lost
+	for bpath in moves[1:]:
+		# get the remaining paths
+		path_lost+=1
+		if len(bpath.paths) > 0:
+			global_path_pool[path_lost].append(bpath)
+	# means we didnt find a solution
+	return None
+def construct_boards(board):
+	boards=[board]
+	board=global_board_pool[board.last_board.lost][board.last_board.id]
+	while board.last_board != None:
+		boards.append(board)
+		board=global_board_pool[board.last_board.lost][board.last_board.id]
+	boards.append(global_board_pool[0][0])
+	return boards[::-1]
+
+
+
+
+
+for _ in repeat(None, 20):
+	# print("----------")
+	print(f"cut={cut}")
+	# evaluate all 0 boards
+	#                                                this shallow copy will allow the board to not get interuppted by the for loop
+	for id, board in enumerate(global_board_pool[cut][:]):
+		if board is None: continue
+		bl=BoardLoc(cut, id)
+		# print(f"Looping board id {bl}")
+		moves=board.get_valid_moves(bl)
+		for paired_move in moves[0]:
+			board_eval_recursive(board.copy_do_move_pair_move(bl, paired_move), cut)
+
+		path_lost=cut
+		for bpath in moves[1:]:
+			# get the remaining paths
+			path_lost+=1
+			if len(bpath.paths) > 0:
+				global_path_pool[path_lost].append(bpath)
 	
-	def get_valid_moves_no_id(self):
-		"""returns a list of B_paths which is also a list\n
-		will be concatnated later\n
-		ex)\n
-		[\n
-			0: [int,int,int]
-			1: B_path
-			2: B_path
-			...\n
-		]\n
-		Remember to not append 0 length path values"""
-		# could use numpy to make the code more efficient
-		# HERE
-		rt = [[]]+[[] for x in repeat(None, MAX_INT_MINUS_ONE)]
-		# 15 elements
-		# print(rt)
+	# print("="*100)
+	# print("board pool")
+	# pprint.pprint(global_board_pool)
+	# print("="*100)
+	# # print("path pool")
+	# # pprint.pprint(global_path_pool)
+	# print("="*100)
+	# print("dict pool")
+	# pprint.pprint(hash_dict)
 
-		nonzero=np.where(self.board != 0)[0]
-		# print(nonzero)
-		for key, select in enumerate(nonzero):
-			# print("-- select --")
-			# print(select)
-			if self.board[select] > 1:
-				# print("tile appears more than twice. adding paired")
-				rt[0].append(np.byte(select)) # in c, it would be presented as a single byte
-			# print("-- target --")
-			for target in nonzero[key+1:]:
-				# print(target)
-				rt[target-select].append(Path(np.byte(select), np.byte(target)))
-		return rt			
-	def format_path_table(rt):
-		# inefficient function
-		strl=[]
-		for k,v in enumerate(rt):
-			strl.append(f"{k}:{v}")
-		return "Board Paths:\n"+"\n".join(strl)
-
-
-	# methods to do stuff
-	def do_move_pair_move(self, sel):
-		# move
-		self.board[sel]-=2
-		return self
-	def do_move_lost(self, sel, tar):
-		self.board[sel]-=1
-		self.board[tar]-=1
-		return self
-	def append_path(self, path):
-		self.paths.append(path)
-		return self
-	def is_finished(self):
-		return not np.any(self.board, 0)
-	
-	def __hash__(self):
-		return hash(str(self.board))
-		
-	def __eq__(self, other):
-		return self.board.__hash__==other.board.__hash__
-
-# a board is always irrelevent when its lost is lower than current cut - (max integer-1)
-
-
-
-if __name__=="__main__":
-	board_skim=-MAX_INT
-	print("="*100)
-	b=r_board(r_board.format_board([1,4,4,5,5,7,10]))
-	print(b)
-	print(b.show_board())
-	print(r_board.format_path_table(b.get_valid_moves(0)))
-	# increase this value after scanning all global branches
-
-	board_lost_dict={}
-	# create an empty dicitonary
-	# basically the thing is like
-	# {
-	#    __hash__:(id)..
-	# }
-	# using the id we can find the lost
-	# and do stuff based on that
-	# only affects globall pools because uh... idk why
-	global_board_pool=[[b]]+[[] for _ in repeat(None, 40)] # the 100 here is just an arbitrary big number
-	# this is now b with id (0,0)
-	# 0,0 means
-	# 0 lost, 0th index board
-	# will not use global_base
-	# boards once assigned are static
-	# board_skimmmer will automatically dereference them
-	print(global_board_pool)
-
-	global_branch_pool=[[] for _ in repeat(None, 40)]
-	# a global branch pool
-	# will be something like
-	# [
-	#   0: [B_path, B_path,...],
-	#   ...
-	# ]
-	# 2 dimensional array
-	# local_board_pool=[]
-	# # 1 dimensional array
-	# local_branch_pool=[]
-	# # 1 dimensional array
-	# the above needs to be defined in the recursive scope
-
-	# logic
-	# step 0
-	# first eval boards
-	# get paths
-	# except for the 0's(append in local branch pool), list them in the global branch(global branch list always grows by 1, which is also cut)
-	# local branch pool means its the active pool that will get dereferenced when it hits end
-	# if there are delta loss 0 boards
-	# 	eval the paths to get other boards
-	#	list the non 0 lost boards to global_pool
-	# 	0 lost boards are stored in local pool
-	# 	if a board hits total 0, then the stop
-	# else
-	# 	increase the cut by 1 and go to step 0 (full loop)
-	
-	# local pools will be executed until they hit the end and get dereferenced by python's gc
-	# basically this logic will store the "leafs" of the tree
-
-
-	dead_pools=set()
-	# a deadpool to check before iterating stuff so i dont get big brain fart
-	"""
-	id is the id in local branch, NOT global"""
-	def recursive_brancher(board:r_board, lost, paths:List[int]):
-		# generate local pools and assign more global pools if needed
-		# is_finished is not checked here
-		print(">> recursive brancher ==================== <<")
-		# the paths are all 0 lost paths
-		boards=[]
-		for path in paths:
-			boards.append(copy.deepcopy(board).append_path(Path(np.byte(path), np.byte(path))).do_move_pair_move(path))
-		print(">> boards")
-		pprint.pprint(boards)
-		for recursive_branch_board in boards:
-			moves=recursive_branch_board.get_valid_moves_no_id()
-			# this is because we are going to generate the board right away
-
-			# send another pair of board and 0 lost moves into the function
-			if len(moves[0]) > 0:
-				recursive_brancher(recursive_branch_board, lost, moves[0])
-			lost=1
-			print(">> moves")
-			pprint.pprint(moves)
-			for lost_idx in range(1+lost, MAX_INT+lost):
-				# loop max_int-1 times
-				# print(lost)
-				if len(moves[lost]) > 0:
-					for path in moves[lost]:
-						global_board_pool[lost_idx].append(copy.deepcopy(recursive_branch_board).do_move_lost(path.sel, path.tar))
-				lost+=1
-	cut=0
-
-
-	# ROOT
-	for i in range(5):
-		# a while True loop would do better, but this is just preventing overlooping
-		print("=============LOOP=============")
-		print(f"iterating {i} times")
-		for idx, board in enumerate(global_board_pool[i]):
-			print(board)
-			id=Board_id(i, idx)
-			print(id)
-			moves=board.get_valid_moves(id)
-			if len(moves[0]) > 0:
-				recursive_brancher(board, i, moves[0])
-			lost=1
-			for lost_idx in range(1+i,MAX_INT+i):
-				# loop max_int-1 times
-				if len(moves[lost].paths)>0:
-					global_branch_pool[lost_idx].append(moves[lost])
-			lost+=1
-		print("GLOBAL BOARD POOL============================")
-		pprint.pprint(global_board_pool)
-		print("GLOBAL BRANCH POOL============================")
-		pprint.pprint(global_branch_pool)
-		break
-
-
-
-
-		cut+=1
-		# skimming logic will be added later
-		# adaptively increase cut
-		# if (board_skim>=0):
-		# 	print(f"skimming board of value {board_skim}")
-
-		board_skim+=1
-
-		
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	# print("-----")
+	# print(f"failed to find within cut:{cut}")
+	cut+=1
+	# print(f"cut is now {cut}")
+	# print("generating new boards...")
+	for bpath in global_path_pool[cut]:
+		# print(f"evaluating board at loc {bpath.id}")
+		stem_board=global_board_pool[bpath.id.lost][bpath.id.id]
+		for p in bpath.paths:
+			bl=BoardLoc(cut, len(global_board_pool[cut]))
+			new_board=stem_board.copy_do_move_lost(bpath.id, p.sel, p.tar)
+			# check hash before adding a board
+			# probably optimize this in v9
+			if new_board.is_finished() == True:
+				print(f"found at cut {cut}")
+				print("time took")
+				print(time.time()-start)
+				pprint.pprint(construct_boards(new_board))
+				exit()
+			if new_board.hash in hash_dict:
+				if hash_dict[new_board.hash].lost < cut+1:
+					# raise Error("AN EXISTING HASH DICTIONARY HAD LOWER LOST THAN NEW")
+					# # this statement should also return the funciton
+					# # i just wanted to test some theory
+					# do nothing
+					pass
+				if hash_dict[new_board.hash].lost > cut+1:
+					print("DEBUG: dictionary board had higher lost than new board. replacing...")
+					global_board_pool[hash_dict[new_board.hash].lost][hash_dict[new_board.hash].id]=None
+					# set the original board to a compromised board = "None"
+					# this is a bad practice but memorywise better
+					hash_dict[new_board.hash]=bl
+					# append because this is a better board
+					global_board_pool[cut].append(new_board)
+				# if hash_dict[new_board.hash].lost == new_board:
+				# 	print("++++++++++++++++++++++++++")
+			else:
+				hash_dict[new_board.hash]=bl
+				# append if hash was different
+				global_board_pool[cut].append(new_board)
+	global_path_pool[cut]=REMOVED_FROM_MEMORY
+	# print("done adding boards")
+	# print("="*100)
+	# print("board pool")
+	# pprint.pprint(global_board_pool)
+	# print("="*100)
+	# print("path pool")
+	# pprint.pprint(global_path_pool)
+	# print("="*100)
+	# print("dict pool")
+	# pprint.pprint(hash_dict)

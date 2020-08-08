@@ -2,6 +2,10 @@
 # this version is a working version of a search depth 1 pooling system
 # although it has major bugs, this is actually a working prototype capable of creating world records
 
+# v8 revision
+# i found out why different boards gave the same hash
+# when boards are parsed as string, they only give edge values
+
 
 import itertools
 from itertools import repeat

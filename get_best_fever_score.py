@@ -1,8 +1,9 @@
 import numpy as np
 
-myBoardNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+myBoardNums = [6,10,6,7,15,9,7,3,4,8]
 
 
+import time
 class FeverBoard:
     def __init__(self, nums):
         self.nums = nums
@@ -68,4 +69,7 @@ class FeverBoard:
 
 
 if __name__ == "__main__":
+    start = time.time()
     print(FeverBoard(myBoardNums).get_best_fever_score())
+    print("time took")
+    print(time.time()-start)

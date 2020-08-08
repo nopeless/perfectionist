@@ -113,7 +113,7 @@ class r_board:
 		return f"Board:\n{self.board}"
 
 	def format_board(board):
-		return_board=np.zeros(MAX_INT, numpy.byte) # extremely efficient
+		return_board=np.zeros(MAX_INT, numpy.byte) # extremely efficient 
 		i=0
 		for tile in board:
 			return_board[tile-1]+=1
