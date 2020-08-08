@@ -14,7 +14,7 @@ MAX_BRANCH_POOL=<the maximum amount of future branches to keep>
 FEVER=<endgame phase requirement tiles>
 MAX_INT=<the maximum number of the tile. used to pigeon sort>
 ```
-`get_best_fever_score.py` is an endgame/fever time purpose only prototype.
+`get_best_fever_score.py`, `gamev8_fevertime_logic.py` is an endgame/fever time purpose only prototype.
 
 ## Contributers
 * **Me Too Thanks#7924** *(discord)* - author of `get_best_fever_score.py`, `fetch_daily_board.py`
