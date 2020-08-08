@@ -26,7 +26,7 @@ class FeverBoard:
 
     def get_best_fever_score_recurse(self, my_nums, tile_is_saved, depth, accumulated_score):
         if len(my_nums) == 1:
-            # All tiles must be matched off if we have already saved a tile.
+            # All tiles must be matched off if we have already saved a tile. 
             if tile_is_saved:
                 return 10000
             else:

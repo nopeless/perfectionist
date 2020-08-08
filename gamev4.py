@@ -4,7 +4,7 @@
 
 # v8 revision
 # i found out why different boards gave the same hash
-# when boards are parsed as string, they only give edge values
+# when boards are parsed as string, they only give edge values 
 
 
 import itertools
