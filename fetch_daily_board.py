@@ -52,4 +52,4 @@ if __name__ == "__main__":
     print()
     print()
     print("Testing ... printing the daily board as a 1d Numpy array:")
-    print(fetch_daily_board())
+    print(repr(fetch_daily_board()))

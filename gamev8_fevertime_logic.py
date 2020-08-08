@@ -1,6 +1,8 @@
-# v7 (current version) revision
-# this version should implement a recursive function to search 0 lost branches
-# its the best method i have at the current time
+# v8 logic
+# v7 logic + set pooling 
+# basically have a set of dead pools
+# taking of set union lookup O(1)
+
 
 from typing import List
 import itertools
@@ -31,25 +33,6 @@ from numpy.core.function_base import linspace
 # due to how global pool allocation works, this is memory efficient (at least in theory. idk how exactly python gc works)
 # 
 
-
-
-"""stupid design draft
-	what is this????
-	old design
-	???????????????????????????????
-	{
-		immute:[
-			int, int, int,...
-		]
-		mute:[ 
-			0: None(by design?),
-			1: B_path,...
-		]
-	}
-	the mute list will be sent to the global pool
-	since b_path itself is a list, its sends the pointer
-	which is why 'None' is ok as first element
-"""
 
 # design 2
 
@@ -276,6 +259,9 @@ if __name__=="__main__":
 	# local pools will be executed until they hit the end and get dereferenced by python's gc
 	# basically this logic will store the "leafs" of the tree
 
+
+	dead_pools=set()
+	# a deadpool to check before iterating stuff so i dont get big brain fart
 	"""
 	id is the id in local branch, NOT global"""
 	def recursive_brancher(board:r_board, lost, paths:List[int]):
