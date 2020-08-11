@@ -10,7 +10,7 @@ import pprint
 import heapq
 import copy
 
-
+from fetch_daily_board import fetch_daily_board
 
 X=6
 Y=8
@@ -19,7 +19,7 @@ SIZE=X*Y
 
 #test
 CUT=40
-MAX_BRANCH_POOL=20000
+MAX_BRANCH_POOL=10000
 
 
 FEVER=10
@@ -208,8 +208,8 @@ if __name__=="__main__":
 	# 	  9,  4,  6,  9,  2, 11,
 	# 	 10, 11,  1,  9, 11, 11
 	# 	], dtype=np.byte), SIZE, 0)
-	game_board=r_board(np.array(
-		[9,7,1,11,8,10,4,3,11,1,15,7,9,9,13,3,11,14,3,11,12,3,4,13,15,8,12,10,7,9,4,2,14,6,13,7,11,3,8,4,15,8,6,3,6,14,5,12], dtype=np.byte), SIZE, 0)
+	#game_board=r_board(np.array(
+	#	[9,7,1,11,8,10,4,3,11,1,15,7,9,9,13,3,11,14,3,11,12,3,4,13,15,8,12,10,7,9,4,2,14,6,13,7,11,3,8,4,15,8,6,3,6,14,5,12], dtype=np.byte), SIZE, 0)
 	# game_board=r_board(np.array(
 	# 	[
 	# 	 1,2,
@@ -219,7 +219,7 @@ if __name__=="__main__":
 	# 	 3,4,4,3], dtype=np.byte), SIZE, 0)
 	# print(game_board)
 	
-
+	game_board = r_board(fetch_daily_board(), SIZE, 0)
 	# pprint.pprint(game_board.get_valid_moves())
 	# s=0
 	# for thing in game_board.get_valid_moves():

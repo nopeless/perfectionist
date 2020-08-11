@@ -1,15 +1,17 @@
 import numpy as np
 
-myBoardNums = [4, 5, 6, 9, 9, 14, 14, 12, 15]
+myBoardNums = [4, 5, 6, 9, 9, 14, 14, 12, 15, 10]
 
-# myBoardNums = [5, 5, 9]
+FEVER = 10
+MAX_INT = 15
 
 class FeverBoard:
     def __init__(self, nums):
         self.nums = nums
         self.threshold_value = 0
 
-    def get_best_fever_score(self):
+    def get_best_fever_score(self, hard_threshold = FEVER * MAX_INT):
+        #print("Search started")
         my_nums = np.sort(self.nums)
         j = 0
         while j < len(my_nums) - 1:
@@ -19,8 +21,10 @@ class FeverBoard:
             j = j + 1
         my_value = self.get_best_fever_score_recurse(my_nums, False, 0, 0)
         while my_value > self.threshold_value:
-            print("Could not meet the score of " + str(self.threshold_value) + ". Incrementing.")
+            #print("Could not meet the score of " + str(self.threshold_value) + ". Incrementing.")
             self.threshold_value += 1
+            if self.threshold_value >= hard_threshold:
+                return hard_threshold + 1
             my_value = self.get_best_fever_score_recurse(my_nums, False, 0, 0)
         return my_value
 
@@ -30,18 +34,6 @@ class FeverBoard:
                 return 10000
             else:
                 return my_nums[0] + accumulated_score
-            '''
-            if len(my_nums) == 3:
-                if my_nums[0] + my_nums[1] == my_nums[2]:
-                    return my_nums[0] + accumulated_score
-                # All tiles must be matched off if we have already saved a tile.
-                elif tile_is_saved:
-                    return 10000
-                elif my_nums[0] + my_nums[1] > my_nums[2]:
-                    return my_nums[0] + my_nums[1] + accumulated_score
-                else:
-                    return my_nums[2] + accumulated_score
-            '''
         elif len(my_nums) == 0:
             return accumulated_score
         else:
@@ -92,4 +84,4 @@ class FeverBoard:
 
 
 if __name__ == "__main__":
-    print(FeverBoard(myBoardNums).get_best_fever_score())
+    FeverBoard(myBoardNums).get_best_fever_score()

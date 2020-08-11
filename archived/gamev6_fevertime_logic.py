@@ -157,7 +157,7 @@ if __name__=="__main__":
 
 	def recursive_brancher(path):
 		# generate local pools and assign more global pools if needed
-		for 
+		pass
 	cut=0
 	for i in range(2):
 		# a while True loop would do better, but this is just preventing overlooping
