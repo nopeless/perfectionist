@@ -3,7 +3,7 @@ import numpy as np
 
 
 # The board dimension specifies whether the board will be returned as a 1d array or 2d array.
-# Either way, it will be returned as a Numpy array.
+# Either way, it will be returned as a Numpy array. 
 def fetch_daily_board(board_dimension=1):
 
     response = requests.get("https://louigiverona.com/perfectionist/read_periodicals.php")
@@ -52,4 +52,4 @@ if __name__ == "__main__":
     print()
     print()
     print("Testing ... printing the daily board as a 1d Numpy array:")
-    print(fetch_daily_board())
+    print(repr(fetch_daily_board()))

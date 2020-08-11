@@ -2,6 +2,10 @@
 # this version is a working version of a search depth 1 pooling system
 # although it has major bugs, this is actually a working prototype capable of creating world records
 
+# v8 revision
+# i found out why different boards gave the same hash
+# when boards are parsed as string, they only give edge values 
+
 
 import itertools
 from itertools import repeat
@@ -10,7 +14,7 @@ import pprint
 import heapq
 import copy
 
-from fetch_daily_board import fetch_daily_board
+
 
 X=6
 Y=8
@@ -19,7 +23,7 @@ SIZE=X*Y
 
 #test
 CUT=40
-MAX_BRANCH_POOL=10000
+MAX_BRANCH_POOL=20000
 
 
 FEVER=10
@@ -208,8 +212,10 @@ if __name__=="__main__":
 	# 	  9,  4,  6,  9,  2, 11,
 	# 	 10, 11,  1,  9, 11, 11
 	# 	], dtype=np.byte), SIZE, 0)
-	#game_board=r_board(np.array(
-	#	[9,7,1,11,8,10,4,3,11,1,15,7,9,9,13,3,11,14,3,11,12,3,4,13,15,8,12,10,7,9,4,2,14,6,13,7,11,3,8,4,15,8,6,3,6,14,5,12], dtype=np.byte), SIZE, 0)
+	game_board=r_board(np.array(
+		[10, 15, 10,  5, 13, 11,  2,  4,  1, 11, 13,  7,  4,  1,  7,  5, 13,
+        5,  1,  7,  8,  7, 10, 15, 13,  6, 14,  3,  1, 10,  1,  7,  7,  2,
+       13, 10,  9, 15,  6,  2,  5,  6,  9,  2, 10,  4, 11, 10], dtype=np.byte), SIZE, 0)
 	# game_board=r_board(np.array(
 	# 	[
 	# 	 1,2,
@@ -219,7 +225,7 @@ if __name__=="__main__":
 	# 	 3,4,4,3], dtype=np.byte), SIZE, 0)
 	# print(game_board)
 	
-	game_board = r_board(fetch_daily_board(), SIZE, 0)
+
 	# pprint.pprint(game_board.get_valid_moves())
 	# s=0
 	# for thing in game_board.get_valid_moves():
