@@ -25,3 +25,5 @@ MAX_INT=<the maximum number of the tile. used to pigeon sort>
 **2020.8.8**
 * added this log section
 * v8 fevertime logic was finished
+**2020.8.12**
+* v9 generation code was finished
