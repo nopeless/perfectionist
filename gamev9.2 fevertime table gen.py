@@ -3,9 +3,12 @@
 # which is the MAIN difference between other boards
 # this code is incompatible with v8
 
-# v9.1 revision
-# this code is flawed ffs
+# game v9.1 table gen
+# nhr is now in reverse for faster overall generation
 
+# game v9.2 gen
+# id system changed
+# 15,15,15,...,15  is now id 0
 
 # made with love by nope ❤
 
@@ -56,20 +59,21 @@ returns an array size r with numbers ranging from 0 to r-1"""
 
 
 def nHr_next(n, r):
-	arrange = np.full(r, 0, dtype=np.uint8, order='C')
-	arrange[-1] = -1
+	arrange = np.full(r, n-1, dtype=np.uint8, order='C')
+	arrange[-1] = n
 
 	def nHr_recursive():
 		nonlocal arrange
-		if arrange[0] == n-1:
+
+		if arrange[0] == 0:
 			print("SOFTWARN: overloop")
-			arrange = np.full(r, 0, dtype=np.uint8, order='C')
-			arrange[-1] = -1
-		p = -1
-		while arrange[p] == n-1:
+			arrange = np.full(r, n-1, dtype=np.uint8, order='C')
+			arrange[-1] = n
+		p = r-1
+		while arrange[p] == 0:
 			p -= 1
-		arrange[p] += 1
-		for i in range(p+1, 0):
+		arrange[p] -= 1
+		for i in range(p+1, r):
 			arrange[i] = arrange[p]
 		return arrange
 	return nHr_recursive
@@ -94,8 +98,8 @@ class FeverBoard:
 		# deal with frikin nHr stuff
 		count = 10
 		id = 0
-		ln = 0
-		for loc in range(0, 16):
+		ln = 15
+		for loc in range(15, -1, -1):
 			# print(f"looping loc : {loc}")
 			if self.board[loc] == 0:
 				continue
@@ -103,7 +107,8 @@ class FeverBoard:
 				# print("  repeating...")
 				count -= 1
 				# nHr(?, count)
-				for s in range(16-ln, 16-loc, -1):
+				for s in range(ln+1, loc+1, -1):
+					# print(f"s:{s}")
 					id += nHr(s, count)
 					# print(f"id is now {id}")
 				ln = loc
@@ -132,7 +137,9 @@ class FeverBoard:
 					table[self.id] = lost + k
 					return table[self.id]
 		# for every other case
-		nonzero = np.where(self.board != 0)[0][1:]
+		nonzero = np.where(self.board != 0)[0]
+		if nonzero[0] == 0:
+			nonzero=nonzero[1:]
 		if len(nonzero) == 0:
 			print(self.board)
 			raise Exception(
@@ -154,36 +161,40 @@ class FeverBoard:
 				board[target] -= 1
 				board[target-select] += 1
 				board[0] += 1
-				minlost = min(FeverBoard(board[:]).rcc_fill_table(
+				minlost = min(FeverBoard(board).rcc_fill_table(
 					lost)+select, minlost)
 		table[self.id] = minlost+lost
 		return table[self.id]
 
 
-original_board = FeverBoard(FeverBoard.format_board(
-	[0, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
-print(original_board.id)
+# original_board = FeverBoard(FeverBoard.format_board(
+# 	[15, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
+# print(original_board.id)
 
 
 # print(original_board)
 
 # testing purpose
+
 # test_next = nHr_next(16, 10)
 # for i in range(100):
 # 	tbl = test_next()
 # 	print("------")
+# 	print(tbl)
 # 	print(FeverBoard(FeverBoard.format_board(tbl)).id)
-# 	print(id_from_seq(tbl))
 
 
 # 255 is the marker for "not calculated yet"
+
 table[0] = 0
 next = nHr_next(16, 10)
 counter = 0
 kcounter=0
-for id in range(0, 3268760):
+for id in range(3268760):
+	arr = next()
 	if table[id] != 255:
 		continue
+	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
 	counter+=1
 	if counter == 1000:
 		counter = 0
@@ -192,11 +203,9 @@ for id in range(0, 3268760):
 			print(f"{kcounter}k+ values written id {id}")
 			table.tofile("v9_fevertime_table")
 			print("done writing on file")
-	arr = next()
-	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
 
 
-# add main logic
+# # add main logic
 
 
 table.tofile("v9_fevertime_table")

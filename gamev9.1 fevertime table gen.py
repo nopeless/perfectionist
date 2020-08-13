@@ -3,9 +3,8 @@
 # which is the MAIN difference between other boards
 # this code is incompatible with v8
 
-# v9.1 revision
-# this code is flawed ffs
-
+# game v9.1 table gen
+# nhr is now in reverse for faster overall generation
 
 # made with love by nope ❤
 
@@ -56,20 +55,21 @@ returns an array size r with numbers ranging from 0 to r-1"""
 
 
 def nHr_next(n, r):
-	arrange = np.full(r, 0, dtype=np.uint8, order='C')
-	arrange[-1] = -1
+	arrange = np.full(r, n-1, dtype=np.uint8, order='C')
+	arrange[-1] = n
 
 	def nHr_recursive():
 		nonlocal arrange
-		if arrange[0] == n-1:
+
+		if arrange[0] == 0:
 			print("SOFTWARN: overloop")
-			arrange = np.full(r, 0, dtype=np.uint8, order='C')
-			arrange[-1] = -1
-		p = -1
-		while arrange[p] == n-1:
+			arrange = np.full(r, n-1, dtype=np.uint8, order='C')
+			arrange[-1] = n
+		p = r-1
+		while arrange[p] == 0:
 			p -= 1
-		arrange[p] += 1
-		for i in range(p+1, 0):
+		arrange[p] -= 1
+		for i in range(p+1, r):
 			arrange[i] = arrange[p]
 		return arrange
 	return nHr_recursive
@@ -132,7 +132,9 @@ class FeverBoard:
 					table[self.id] = lost + k
 					return table[self.id]
 		# for every other case
-		nonzero = np.where(self.board != 0)[0][1:]
+		nonzero = np.where(self.board != 0)[0]
+		if nonzero[0] == 0:
+			nonzero=nonzero[1:]
 		if len(nonzero) == 0:
 			print(self.board)
 			raise Exception(
@@ -154,15 +156,15 @@ class FeverBoard:
 				board[target] -= 1
 				board[target-select] += 1
 				board[0] += 1
-				minlost = min(FeverBoard(board[:]).rcc_fill_table(
+				minlost = min(FeverBoard(board).rcc_fill_table(
 					lost)+select, minlost)
 		table[self.id] = minlost+lost
 		return table[self.id]
 
 
-original_board = FeverBoard(FeverBoard.format_board(
-	[0, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
-print(original_board.id)
+# original_board = FeverBoard(FeverBoard.format_board(
+# 	[0, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
+# print(original_board.id)
 
 
 # print(original_board)
@@ -181,7 +183,8 @@ table[0] = 0
 next = nHr_next(16, 10)
 counter = 0
 kcounter=0
-for id in range(0, 3268760):
+for id in range(3268759, -1, -1):
+	arr = next()
 	if table[id] != 255:
 		continue
 	counter+=1
@@ -192,7 +195,6 @@ for id in range(0, 3268760):
 			print(f"{kcounter}k+ values written id {id}")
 			table.tofile("v9_fevertime_table")
 			print("done writing on file")
-	arr = next()
 	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
 
 
