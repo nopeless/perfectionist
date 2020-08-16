@@ -1,6 +1,6 @@
 import numpy as np
 
-myBoardNums = [6,10,6,7,15,9,7,3,4,8]
+myBoardNums = [15, 15, 15, 15, 15, 14, 13, 11,  8]
 
 
 import time

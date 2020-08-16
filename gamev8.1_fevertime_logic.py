@@ -178,8 +178,8 @@ hash_dict={}
 # BoardLoc contains the attribute lost which can be used to evalutate which board is better
 
 
-global_board_pool=[[] for _ in repeat(None, 30)]
-global_path_pool=[[] for _ in repeat(None, 30)]
+global_board_pool=[[] for _ in repeat(None, 60)]
+global_path_pool=[[] for _ in repeat(None, 60)]
 
 
 # we dont evaluate paths until needed
@@ -190,7 +190,7 @@ global_path_pool=[[] for _ in repeat(None, 30)]
 
 
 # print("="*100)
-original_board=FeverBoard(FeverBoard.format_board([6,10,6,7,15,9,7,3,4,8]), None)
+original_board=FeverBoard(FeverBoard.format_board([15, 15, 15, 15, 15, 14, 13, 11,  8]), None)
 # print(original_board)
 global_board_pool[0].append(original_board)
 hash_dict[original_board.hash]=BoardLoc(0,0)
@@ -216,7 +216,8 @@ def board_eval_recursive(root_board, board_lost):
 		print(f"found at cut {cut}")
 		print("time took")
 		print(time.time()-start)
-		return
+		pprint.pprint(construct_boards(root_board))
+		exit()
 	bl=BoardLoc(board_lost, len(global_board_pool[board_lost]))
 	if root_board.hash in hash_dict:
 		if hash_dict[root_board.hash].lost < board_lost:
@@ -259,89 +260,85 @@ def construct_boards(board):
 
 
 
-def main():
-	cut=0
-	for _ in repeat(None, 20):
-		# print("----------")
-		print(f"cut={cut}")
-		# evaluate all 0 boards
-		#                                                this shallow copy will allow the board to not get interuppted by the for loop
-		for id, board in enumerate(global_board_pool[cut][:]):
-			if board is None: continue
-			bl=BoardLoc(cut, id)
-			# print(f"Looping board id {bl}")
-			moves=board.get_valid_moves(bl)
-			for paired_move in moves[0]:
-				board_eval_recursive(board.copy_do_move_pair_move(bl, paired_move), cut)
+for _ in repeat(None, 40):
+	# print("----------")
+	print(f"cut={cut}")
+	# evaluate all 0 boards
+	#                                                this shallow copy will allow the board to not get interuppted by the for loop
+	for id, board in enumerate(global_board_pool[cut][:]):
+		if board is None: continue
+		bl=BoardLoc(cut, id)
+		# print(f"Looping board id {bl}")
+		moves=board.get_valid_moves(bl)
+		for paired_move in moves[0]:
+			board_eval_recursive(board.copy_do_move_pair_move(bl, paired_move), cut)
 
-			path_lost=cut
-			for bpath in moves[1:]:
-				# get the remaining paths
-				path_lost+=1
-				if len(bpath.paths) > 0:
-					global_path_pool[path_lost].append(bpath)
-		
-		# print("="*100)
-		# print("board pool")
-		# pprint.pprint(global_board_pool)
-		# print("="*100)
-		# # print("path pool")
-		# # pprint.pprint(global_path_pool)
-		# print("="*100)
-		# print("dict pool")
-		# pprint.pprint(hash_dict)
+		path_lost=cut
+		for bpath in moves[1:]:
+			# get the remaining paths
+			path_lost+=1
+			if len(bpath.paths) > 0:
+				global_path_pool[path_lost].append(bpath)
+	
+	# print("="*100)
+	# print("board pool")
+	# pprint.pprint(global_board_pool)
+	# print("="*100)
+	# # print("path pool")
+	# # pprint.pprint(global_path_pool)
+	# print("="*100)
+	# print("dict pool")
+	# pprint.pprint(hash_dict)
 
-		# print("-----")
-		# print(f"failed to find within cut:{cut}")
-		cut+=1
-		# print(f"cut is now {cut}")
-		# print("generating new boards...")
-		for bpath in global_path_pool[cut]:
-			# print(f"evaluating board at loc {bpath.id}")
-			stem_board=global_board_pool[bpath.id.lost][bpath.id.id]
-			for p in bpath.paths:
-				bl=BoardLoc(cut, len(global_board_pool[cut]))
-				new_board=stem_board.copy_do_move_lost(bpath.id, p.sel, p.tar)
-				# check hash before adding a board
-				# probably optimize this in v9
-				if new_board.is_finished() == True:
-					print(f"found at cut {cut}")
-					print("time took")
-					print(time.time()-start)
-					return
-				if new_board.hash in hash_dict:
-					if hash_dict[new_board.hash].lost < cut+1:
-						# raise Error("AN EXISTING HASH DICTIONARY HAD LOWER LOST THAN NEW")
-						# # this statement should also return the funciton
-						# # i just wanted to test some theory
-						# do nothing
-						pass
-					if hash_dict[new_board.hash].lost > cut+1:
-						print("DEBUG: dictionary board had higher lost than new board. replacing...")
-						global_board_pool[hash_dict[new_board.hash].lost][hash_dict[new_board.hash].id]=None
-						# set the original board to a compromised board = "None"
-						# this is a bad practice but memorywise better
-						hash_dict[new_board.hash]=bl
-						# append because this is a better board
-						global_board_pool[cut].append(new_board)
-					# if hash_dict[new_board.hash].lost == new_board:
-					# 	print("++++++++++++++++++++++++++")
-				else:
+	# print("-----")
+	# print(f"failed to find within cut:{cut}")
+	cut+=1
+	# print(f"cut is now {cut}")
+	# print("generating new boards...")
+	for bpath in global_path_pool[cut]:
+		# print(f"evaluating board at loc {bpath.id}")
+		stem_board=global_board_pool[bpath.id.lost][bpath.id.id]
+		for p in bpath.paths:
+			bl=BoardLoc(cut, len(global_board_pool[cut]))
+			new_board=stem_board.copy_do_move_lost(bpath.id, p.sel, p.tar)
+			# check hash before adding a board
+			# probably optimize this in v9
+			if new_board.is_finished() == True:
+				print(f"found at cut {cut}")
+				print("time took")
+				print(time.time()-start)
+				pprint.pprint(construct_boards(new_board))
+
+				exit()
+			if new_board.hash in hash_dict:
+				if hash_dict[new_board.hash].lost < cut+1:
+					# raise Error("AN EXISTING HASH DICTIONARY HAD LOWER LOST THAN NEW")
+					# # this statement should also return the funciton
+					# # i just wanted to test some theory
+					# do nothing
+					pass
+				if hash_dict[new_board.hash].lost > cut+1:
+					print("DEBUG: dictionary board had higher lost than new board. replacing...")
+					global_board_pool[hash_dict[new_board.hash].lost][hash_dict[new_board.hash].id]=None
+					# set the original board to a compromised board = "None"
+					# this is a bad practice but memorywise better
 					hash_dict[new_board.hash]=bl
-					# append if hash was different
+					# append because this is a better board
 					global_board_pool[cut].append(new_board)
-		global_path_pool[cut]=REMOVED_FROM_MEMORY
-		# print("done adding boards")
-		# print("="*100)
-		# print("board pool")
-		# pprint.pprint(global_board_pool)
-		# print("="*100)
-		# print("path pool")
-		# pprint.pprint(global_path_pool)
-		# print("="*100)
-		# print("dict pool")
-		# pprint.pprint(hash_dict)
-main()
-main()
-main()
-main()
+				# if hash_dict[new_board.hash].lost == new_board:
+				# 	print("++++++++++++++++++++++++++")
+			else:
+				hash_dict[new_board.hash]=bl
+				# append if hash was different
+				global_board_pool[cut].append(new_board)
+	global_path_pool[cut]=REMOVED_FROM_MEMORY
+	# print("done adding boards")
+	# print("="*100)
+	# print("board pool")
+	# pprint.pprint(global_board_pool)
+	# print("="*100)
+	# print("path pool")
+	# pprint.pprint(global_path_pool)
+	# print("="*100)
+	# print("dict pool")
+	# pprint.pprint(hash_dict)
