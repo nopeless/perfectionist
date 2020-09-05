@@ -202,9 +202,9 @@ class Board:
 class BoardManager:
 	def __init__(self, root:Board, lost_cap=100) -> None:
 		self.lost_cap=lost_cap
-		self.boards=[[] for _ in repeat(None, lost_cap)]
+		self.boards=[[] for _ in repeat(None, lost_cap+1)]
 		self.boards[0].append(root)
-		self.paths=[[] for _ in repeat(None, lost_cap)]
+		self.paths=[[] for _ in repeat(None, lost_cap+1)]
 		self.board_dict={}
 		self.board_dict[root]=BoardLoc(0, 0)
 
@@ -247,7 +247,10 @@ class BoardManager:
 
 	def add_B_Path(self, lost:int, bpath:B_Path):
 		# paths always gets added
-		self.paths[lost].append(bpath)
+		# self.paths[lost].append(bpath)
+		if lost <= self.lost_cap:
+			self.paths[lost].append(bpath)
+
 
 class BoardFinder:
 	def __init__(self, board, limit=50) -> None:
@@ -260,7 +263,7 @@ class BoardFinder:
 	def find_internal(self) -> Board:
 		# the main code
 		print("finding...")
-		for _ in repeat(None, self.limit):
+		for _ in repeat(None, self.limit+1):
 			print(f"cut={self.cut}")
 			for id, board in enumerate(self.board_manager.boards[self.cut][:]):
 				if board is None: continue # failed board
@@ -294,12 +297,12 @@ class BoardFinder:
 					# board exists
 					# evaluate and add to path
 					for path in bpath.paths:
-						self.board_manager.add_board(self.cut, board.copy_do_move_pair(bpath.loc, path))
+						self.board_manager.add_board(self.cut, board.copy_do_move_lost(bpath.loc, path))
 			# remove memory
 			self.board_manager.paths[self.cut]=None
 			# remove board memory
 			# idk how to implement this yet
-
+		print("= FAILED =")
 	def find(self) -> str:
 		self.solution_set=self.board_manager.construct_boards(self.find_internal())
 		return "\n".join(map(lambda x: repr(x), self.solution_set))
@@ -321,7 +324,6 @@ class BoardFinder:
 			eval_res=root_board.copy_do_move_pair(added_loc, paired_move)
 			if eval_res is not None:
 				if eval_res.is_finished():
-					print("PAIRED")
 					print(eval_res)
 					return eval_res
 		for bpath_lost, bpath in enumerate(moves[1:], self.cut+1):
@@ -340,9 +342,11 @@ class BoardFinder:
 if __name__=="__main__":
 	print("running default main")
 	board=Board(np.array(
-		[11,1,11,8,13,11,12,2,3,13,4,11,15,1,4,3,12,3,3,12,4,6,9,2,13,5,13,1,1,9,11,12,10,10,1,11,11,2,10,2,3,9,6,4,9,10,13,12], dtype=np.int8), 48)
+		[11,1,11,8,13,11,12,2,3,13,4,11,14,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], dtype=np.int8), 14)
+	#
+	# [11,1,11,8,13,11,12,2,3,13,4,11,15,1,4,3,12,3,3,12,4,6,9,2,13,5,13,1,1,9,11,12,10,10,1,11,11,2,10,2,3,9,6,4,9,10,13,12], dtype=np.int8), 48)
 	# print(b.hash)
-	game=BoardFinder(board)
+	game=BoardFinder(board, 7)
 	print(game.find())
 	# moves=b.get_valid_moves(BoardLoc(0,0))
 	# print("-"*100)

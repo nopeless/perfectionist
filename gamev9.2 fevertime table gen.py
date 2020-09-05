@@ -121,20 +121,20 @@ class FeverBoard:
 			return_board[tile] += 1
 		return return_board
 
-	def rcc_fill_table(self, lost=0):
+	def rcc_fill_table(self):
 		if table[self.id] != 255:
 			return table[self.id]
 		if self.board[0] > 10:
 			raise Exception("more than 10 zeros?????? WTF")
 			# FIXMEEEEEE
 		if self.board[0] == 10:
-			return lost
+			return 0
 
 			# raise Exception("Why did i get an empty board???")
 		if self.board[0] == 9:
 			for k, v in enumerate(self.board[1:], 1):
 				if v != 0:
-					table[self.id] = lost + k
+					table[self.id] = k
 					return table[self.id]
 		# for every other case
 		nonzero = np.where(self.board != 0)[0]
@@ -151,7 +151,7 @@ class FeverBoard:
 				board = self.board.copy()
 				board[select] -= 2
 				board[0] += 2
-				minlost = min(FeverBoard(board).rcc_fill_table(lost), minlost)
+				minlost = min(FeverBoard(board).rcc_fill_table(), minlost)
 			for target in nonzero[key:]:
 				# paired stuff
 				# print(f" ({select}, {target})")
@@ -161,9 +161,8 @@ class FeverBoard:
 				board[target] -= 1
 				board[target-select] += 1
 				board[0] += 1
-				minlost = min(FeverBoard(board).rcc_fill_table(
-					lost)+select, minlost)
-		table[self.id] = minlost+lost
+				minlost = min(FeverBoard(board).rcc_fill_table()+select, minlost)
+		table[self.id] = minlost
 		return table[self.id]
 
 

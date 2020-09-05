@@ -190,7 +190,7 @@ global_path_pool=[[] for _ in repeat(None, 60)]
 
 
 # print("="*100)
-original_board=FeverBoard(FeverBoard.format_board([15, 15, 15, 15, 15, 14, 13, 11,  8]), None)
+original_board=FeverBoard(FeverBoard.format_board([7, 13, 12,2,3,13,4,14,1]), None)
 # print(original_board)
 global_board_pool[0].append(original_board)
 hash_dict[original_board.hash]=BoardLoc(0,0)
