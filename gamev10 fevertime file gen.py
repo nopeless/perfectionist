@@ -38,12 +38,31 @@ nCr = nCr_precalculated()
 def nHr(n: int, r: int):
 	return nCr((n+r-1), r)
 
+def nHr_next(n, r):
+	arrange = np.full(r, n-1, dtype=np.uint8, order='C')
+	arrange[-1] = n
+
+	def nHr_recursive():
+		nonlocal arrange
+
+		if arrange[0] == 0:
+			print("SOFTWARN: overloop")
+			arrange = np.full(r, n-1, dtype=np.uint8, order='C')
+			arrange[-1] = n
+		p = r-1
+		while arrange[p] == 0:
+			p -= 1
+		arrange[p] -= 1
+		for i in range(p+1, r):
+			arrange[i] = arrange[p]
+		return arrange
+	return nHr_recursive
 
 
 
 
 # table = np.full(3268760, 255, dtype=np.uint8, order='C')
-table = np.fromfile("v10_fevertime_table", np.uint8, -1)
+table = np.fromfile("v10_fevertime_table.bin", np.uint8, -1)
 
 class FeverBoard:
 	def __init__(self, board) -> None:
@@ -126,48 +145,52 @@ class FeverBoard:
 		return table[self.id]
 
 
-# original_board = FeverBoard(FeverBoard.format_board(
-# 	[15, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
-# print(original_board.id)
+original_board = FeverBoard(FeverBoard.format_board(
+	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+print(original_board.id)
+original_board = FeverBoard(FeverBoard.format_board(
+	[13, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
+print(original_board.id)
 
 
 # print(original_board)
 
 # testing purpose
 
-# test_next = nHr_next(16, 10)
-# for i in range(100):
-# 	tbl = test_next()
-# 	print("------")
-# 	print(tbl)
-# 	print(FeverBoard(FeverBoard.format_board(tbl)).id)
+test_next = nHr_next(16, 10)
+for i in range(1000):
+	tbl = test_next()
+	# print("------")
+	print(tbl, " - ", end="")
+	print(FeverBoard(FeverBoard.format_board(tbl)).id)
+	assert(i == FeverBoard(FeverBoard.format_board(tbl)).id)
 
 
 # 255 is the marker for "not calculated yet"
 
-table[0] = 0
-next = nHr_next(16, 10)
-counter = 0
-kcounter=0
-for id in range(3268760):
-	arr = next()
-	if table[id] != 255:
-		continue
-	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
-	counter+=1
-	if counter == 1000:
-		counter = 0
-		kcounter += 1
-		if kcounter % 10 == 0:
-			print(f"{kcounter}k+ values written id {id}")
-			table.tofile("v9_fevertime_table")
-			print("done writing on file")
+# table[0] = 0
+# next = nHr_next(16, 10)
+# counter = 0
+# kcounter=0
+# for id in range(3268760):
+# 	arr = next()
+# 	if table[id] != 255:
+# 		continue
+# 	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
+# 	counter+=1
+# 	if counter == 1000:
+# 		counter = 0
+# 		kcounter += 1
+# 		if kcounter % 10 == 0:
+# 			print(f"{kcounter}k+ values written id {id}")
+# 			table.tofile("v10_fevertime_table.bin")
+# 			print("done writing on file")
 
 
-# # add main logic
+# # # add main logic
 
 
-table.tofile("v9_fevertime_table")
+# table.tofile("v10_fevertime_table.bin")
 
 
 
