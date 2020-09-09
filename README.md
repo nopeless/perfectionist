@@ -35,3 +35,6 @@ MAX_INT=<the maximum number of the tile. used to pigeon sort>
 
 **2020.8.17**
 * v10 (doesnt work) was finished
+
+**2020.9.5**
+* v10 fever time outline was made
