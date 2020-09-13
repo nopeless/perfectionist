@@ -38,3 +38,9 @@ MAX_INT=<the maximum number of the tile. used to pigeon sort>
 
 **2020.9.5**
 * v10 fever time outline was made
+
+**2020.9.12**
+* I should have created separate files for versions but ehh.... its too late anyway
+
+**2020.9.13**
+* Fevertime table was verified
