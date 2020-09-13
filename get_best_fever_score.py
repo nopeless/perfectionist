@@ -1,7 +1,9 @@
 import numpy as np
 
-myBoardNums = [15, 15, 15, 15, 15, 14, 13, 11,  8]
+myBoardNums =sorted([11, 5, 5, 4, 14, 15, 3, 1, 13, 0])
 
+if 0 in myBoardNums:
+    myBoardNums.remove(0)
 
 import time
 class FeverBoard:

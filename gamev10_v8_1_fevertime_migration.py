@@ -7,6 +7,9 @@
 # v8.1
 # removed atrocious deepcopy from the code
 
+# v10 migration
+# put the whole file in main (yeah not the most genius move ik)
+
 
 from copy import Error
 from typing import List
@@ -217,11 +220,11 @@ def main(board):
 	def board_eval_recursive(root_board, board_lost):
 		# print(root_board.hash)
 		if root_board.is_finished() == True:
-			print(f"found at cut {cut}")
-			print("time took")
-			print(time.time()-start)
-			pprint.pprint(construct_boards(root_board))
-			exit()
+			# print(f"found at cut {cut}")
+			# print("time took")
+			# print(time.time()-start)
+			# pprint.pprint(construct_boards(root_board))
+			return cut
 		bl=BoardLoc(board_lost, len(global_board_pool[board_lost]))
 		if root_board.hash in hash_dict:
 			if hash_dict[root_board.hash].lost < board_lost:
@@ -230,7 +233,7 @@ def main(board):
 				# i just wanted to test some theory
 				return
 			if hash_dict[root_board.hash].lost > board_lost:
-				print("DEBUG: dictionary board had higher lost than new board. replacing...")
+				# print("DEBUG: dictionary board had higher lost than new board. replacing...")
 				global_board_pool[hash_dict[root_board.hash].lost][hash_dict[root_board.hash].id]=None
 				# set the original board to a compromised board = "None"
 				# this is a bad practice but memorywise better
@@ -262,7 +265,7 @@ def main(board):
 		return boards[::-1]
 	for _ in repeat(None, 40):
 		# print("----------")
-		print(f"cut={cut}")
+		# print(f"cut={cut}")
 		# evaluate all 0 boards
 		#                                                this shallow copy will allow the board to not get interuppted by the for loop
 		for id, board in enumerate(global_board_pool[cut][:]):
@@ -271,8 +274,9 @@ def main(board):
 			# print(f"Looping board id {bl}")
 			moves=board.get_valid_moves(bl)
 			for paired_move in moves[0]:
-				board_eval_recursive(board.copy_do_move_pair_move(bl, paired_move), cut)
-
+				result = board_eval_recursive(board.copy_do_move_pair_move(bl, paired_move), cut)
+				if result is not None:
+					return result
 			path_lost=cut
 			for bpath in moves[1:]:
 				# get the remaining paths
@@ -304,10 +308,10 @@ def main(board):
 				# check hash before adding a board
 				# probably optimize this in v9
 				if new_board.is_finished() == True:
-					print(f"found at cut {cut}")
-					print("time took")
-					print(time.time()-start)
-					pprint.pprint(construct_boards(new_board))
+					# print(f"found at cut {cut}")
+					# print("time took")
+					# print(time.time()-start)
+					# pprint.pprint(construct_boards(new_board))
 
 					return cut
 				if new_board.hash in hash_dict:
@@ -318,7 +322,7 @@ def main(board):
 						# do nothing
 						pass
 					if hash_dict[new_board.hash].lost > cut+1:
-						print("DEBUG: dictionary board had higher lost than new board. replacing...")
+						# print("DEBUG: dictionary board had higher lost than new board. replacing...")
 						global_board_pool[hash_dict[new_board.hash].lost][hash_dict[new_board.hash].id]=None
 						# set the original board to a compromised board = "None"
 						# this is a bad practice but memorywise better

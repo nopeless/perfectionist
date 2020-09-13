@@ -103,6 +103,7 @@ class FeverBoard:
 	def rcc_fill_table(self):
 		if table[self.id] != 255:
 			return table[self.id]
+			# the amount of reduction 
 		if self.board[0] > 10:
 			raise Exception("more than 10 zeros?????? WTF")
 			# FIXMEEEEEE
@@ -113,20 +114,27 @@ class FeverBoard:
 		if self.board[0] == 9:
 			for k, v in enumerate(self.board[1:], 1):
 				if v != 0:
+					# v is going to be 1
+					# return the tile
 					table[self.id] = k
-					return table[self.id]
+					return k
 		# for every other case
+		# print("*"*100)
 		nonzero = np.where(self.board != 0)[0]
+		# print(nonzero)
 		if nonzero[0] == 0:
 			nonzero=nonzero[1:]
 		if len(nonzero) == 0:
 			print(self.board)
 			raise Exception(
 				"WHAT... len was 0 which means zero count should be 0")
+		# print(nonzero)
 		minlost = 254
 		# print(nonzero)
 		for key, select in enumerate(nonzero, 1):
 			if self.board[select] > 1:
+				# removing two at once
+				# no reduction
 				board = self.board.copy()
 				board[select] -= 2
 				board[0] += 2
@@ -141,56 +149,64 @@ class FeverBoard:
 				board[target-select] += 1
 				board[0] += 1
 				minlost = min(FeverBoard(board).rcc_fill_table()+select, minlost)
+		if minlost == 254:
+			print("minlost was 254 what")
+			exit()
 		table[self.id] = minlost
-		return table[self.id]
+		return minlost
 
 
-original_board = FeverBoard(FeverBoard.format_board(
-	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
-print(original_board.id)
-original_board = FeverBoard(FeverBoard.format_board(
-	[13, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
-print(original_board.id)
+# original_board = FeverBoard(FeverBoard.format_board(
+# 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+# print(original_board.id)
+# original_board = FeverBoard(FeverBoard.format_board(
+# 	[13, 15, 15, 15, 15, 15, 15, 15, 15, 15]))
+# print(original_board.id)
 
 
 # print(original_board)
 
 # testing purpose
 
-test_next = nHr_next(16, 10)
-for i in range(1000):
-	tbl = test_next()
-	# print("------")
-	print(tbl, " - ", end="")
-	print(FeverBoard(FeverBoard.format_board(tbl)).id)
-	assert(i == FeverBoard(FeverBoard.format_board(tbl)).id)
+# test_next = nHr_next(16, 10)
+# for i in range(1000):
+# 	tbl = test_next()
+# 	# print("------")
+# 	print(tbl, " - ", end="")
+# 	print(FeverBoard(FeverBoard.format_board(tbl)).id)
+# 	assert(i == FeverBoard(FeverBoard.format_board(tbl)).id)
 
 
 # 255 is the marker for "not calculated yet"
 
-# table[0] = 0
-# next = nHr_next(16, 10)
-# counter = 0
-# kcounter=0
-# for id in range(3268760):
-# 	arr = next()
-# 	if table[id] != 255:
-# 		continue
-# 	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
-# 	counter+=1
-# 	if counter == 1000:
-# 		counter = 0
-# 		kcounter += 1
-# 		if kcounter % 10 == 0:
-# 			print(f"{kcounter}k+ values written id {id}")
-# 			table.tofile("v10_fevertime_table.bin")
-# 			print("done writing on file")
+
+# print(FeverBoard(FeverBoard.format_board([11, 5, 5, 4, 14, 15, 3, 0, 1, 13])).rcc_fill_table())
+
+# exit()
+
+table[0] = 0
+next = nHr_next(16, 10)
+counter = 0
+kcounter=0
+for id in range(3268760):
+	arr = next()
+	if table[id] != 255:
+		continue
+	FeverBoard(FeverBoard.format_board(arr)).rcc_fill_table()
+	counter+=1
+	if counter == 1000:
+		counter = 0
+		kcounter += 1
+		if kcounter % 10 == 0:
+			print(f"{kcounter}k+ values written id {id}")
+			table.tofile("v10_fevertime_table.bin")
+			print("done writing on file")
 
 
-# # # add main logic
+# # add main logic
 
 
-# table.tofile("v10_fevertime_table.bin")
+table.tofile("v10_fevertime_table.bin")
 
 
 
